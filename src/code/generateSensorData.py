@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-模拟传感器数据
+模拟传感器数据，传感器的数据每秒采集一次
 Created on 2022-04-18   12:04:21
 @author: TA
 '''
@@ -16,11 +16,12 @@ def generate_temperature_data():
         for i in range(1000):
             temperature = random.randint(20, 30)
             f.write('{},{}\n'.format(i, temperature))
+
             
 def generate_humidity_data():
     with open(humidity_file, 'w') as f:
         for i in range(1000):
-            humidity = random.randint(60, 80)
+            humidity = random.randint(20, 30)
             f.write('{},{}\n'.format(i, humidity))
             
 
