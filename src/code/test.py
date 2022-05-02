@@ -7,6 +7,8 @@ import threading
 import time
 import re
 from queue import Queue
+import json
+import pymongo
 host = '127.0.0.1'
 data = 'hello world'
 # port = 8888
@@ -62,5 +64,14 @@ data = 'hello world'
 #         print('信息格式有误，请重新输入\n')
 
 
-data = 'interval 5'
-print(int(data[8:]))
+# data = 'interval 5'
+# print(int(data[8:]))
+
+list={'a':1,'b':0}
+print(list)
+dump = json.dumps(list)
+print(dump)
+
+time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+print(time)
+print(type(time))

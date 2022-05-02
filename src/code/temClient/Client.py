@@ -8,6 +8,7 @@ import os
 import threading
 import time
 import re
+import json
 from socket import *
 from queue import Queue
 
@@ -49,8 +50,15 @@ class TemEmulator:
                 time.sleep(self.interval)
                 continue
             print('1', type(i))
+            
+            ID = i.split(',')[0]
+            sensor_data = i.split(',')[1]
+            now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) # 获取当前时间
+            item_raw = {'ID': ID, 'data_type': 'temprature', 'sensor_data': sensor_data, 'time': now_time}
+            item = json.dumps(item_raw)
+            
             l.acquire()
-            queue.put(i)
+            queue.put(item)
             l.release()
             time.sleep(self.interval)
 
@@ -73,15 +81,22 @@ class Client():
         '''
         获取传感器数据的线程，间隔为interval秒
         '''
-        getDataThread = threading.Thread(
-            target=self.TemEmulator.generate_date, args=(self.queue,))
+        getDataThread = threading.Thread(target=self.TemEmulator.generate_date, args=(self.queue,))
         getDataThread.start()
 
     def reveive_thread(self):
         while True:
-            data = self.clientSocket.recv(BUFSIZE).decode('utf-8')
-            self.serverQueue.put(data)
-            self.parse()
+            try:
+                data = self.clientSocket.recv(BUFSIZE).decode('utf-8')
+                self.serverQueue.put(data)
+                self.parse()
+            except ConnectionResetError:
+                print('远程服务器已关闭，发送线程已自动退出')
+                return
+            
+            except TimeoutError:
+                print('接受超时，已自动退出')
+                return
 
     def send_thread(self):
         while True:
@@ -89,18 +104,26 @@ class Client():
                 continue
             data = self.queue.get()
             print('2', type(data))
-            self.clientSocket.send(data.encode('utf-8'))
+            try:
+                self.clientSocket.send(data.encode('utf-8'))
+            except ConnectionResetError:
+                print('远程服务器已关闭，接受线程已自动退出')
+                break
 
     def communicate(self):
-        self.clientSocket.connect((self.serverIp, self.serverPort))
-        self.clientSocket.settimeout(60)
-
+        try:
+            self.clientSocket.connect((self.serverIp, self.serverPort))
+            
+        except ConnectionRefusedError:
+            print('远程服务器未启动，传感器数据无法发送，已自动退出')
+            return
         sendThread = threading.Thread(target=self.send_thread, args=())
+        
         recvThread = threading.Thread(target=self.reveive_thread, args=())
-
+        
         sendThread.start()
         recvThread.start()
-
+        
         sendThread.join()
         recvThread.join()
         self.clientSocket.close()
@@ -127,13 +150,7 @@ class Client():
             self.TemEmulator.set_interval(int(raw_data[8:]))
 
 
-class ClientThread(threading.Thread):
-    def __init__(self, client):
-        self.client = client
-        threading.Thread.__init__(self)
 
-    def run():
-        pass
 
 
 if __name__ == '__main__':
