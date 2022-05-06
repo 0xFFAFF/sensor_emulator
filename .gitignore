@@ -1,1 +1,3 @@
 *.code-workspace
+myenv/
+*.db
