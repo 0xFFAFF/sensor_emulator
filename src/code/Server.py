@@ -42,7 +42,7 @@ def receive_thread(clientSocket,clientAddr,database):
             if(data['data_type'] == 'temprature'):
                 temperature_collect.insert_one(data)
             if(data['data_type'] == 'humidity'):
-                humidity_collect.insert_one(data)
+                humidity_collect.insert_one(data)              
             if(recv_command['cmd'] == 'realtime' and recv_command['client'] == clientAddr):
                 print('clientAddr:{clientAddr},Data:{data}'.format(clientAddr=clientAddr,data=data))
         except ConnectionResetError:
